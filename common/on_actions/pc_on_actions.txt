@@ -1,0 +1,16 @@
+# Monthly approval pulse
+on_monthly_pulse_country = {
+	events = {
+		potent_councilors.1
+	}
+}
+
+# Yearly chance for council meetings
+on_yearly_pulse_country = {
+	random_events = {
+		20 = 0
+		3 = potent_councilors.100
+		2 = potent_councilors.101
+		# Add more meeting types here
+	}
+}

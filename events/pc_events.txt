@@ -1,0 +1,316 @@
+namespace = potent_councilors
+
+# Monthly approval update + chance for opinion-based events
+country_event = {
+	id = potent_councilors.1
+	hide_window = yes
+	is_triggered_only = yes
+
+	trigger = {
+		is_ai = no
+		NOT = { is_gestalt = yes }
+		any_owned_leader = {
+			is_councilor = yes
+			is_ruler = no
+		}
+	}
+
+	immediate = {
+		every_owned_leader = {
+			limit = {
+				is_councilor = yes
+				is_ruler = no
+			}
+
+			# Initialize if needed
+			if = {
+				limit = { NOT = { is_variable_set = pc_approval } }
+				set_variable = { which = pc_approval value = 50 }
+			}
+
+			# Base decay toward 50
+			if = {
+				limit = { check_variable = { which = pc_approval value > 50 } }
+				change_variable = { which = pc_approval value = -1 }
+			}
+			else_if = {
+				limit = { check_variable = { which = pc_approval value < 50 } }
+				change_variable = { which = pc_approval value = 1 }
+			}
+
+			# Performance modifiers (examples – expand as desired)
+			# High average stability boosts officials more
+			if = {
+				limit = {
+					leader_class = official
+					owner = {
+						average_planet_stability >= 70
+					}
+				}
+				change_variable = { which = pc_approval value = 2 }
+			}
+			else_if = {
+				limit = {
+					leader_class = official
+					owner = {
+						average_planet_stability <= 40
+					}
+				}
+				change_variable = { which = pc_approval value = -3 }
+			}
+
+			# Research progress / tech boosts scientists
+			if = {
+				limit = {
+					leader_class = scientist
+					owner = {
+						has_technology = tech_repeatable_improved_admin
+					}
+				}
+				change_variable = { which = pc_approval value = 1 }
+			}
+
+			# Military strength / recent war success for commanders
+			if = {
+				limit = {
+					leader_class = commander
+					owner = {
+						has_modifier = pc_recent_military_success # set elsewhere on war end
+					}
+				}
+				change_variable = { which = pc_approval value = 3 }
+			}
+
+			# Clamp 0-100
+			if = {
+				limit = { check_variable = { which = pc_approval value > 100 } }
+				set_variable = { which = pc_approval value = 100 }
+			}
+			if = {
+				limit = { check_variable = { which = pc_approval value < 0 } }
+				set_variable = { which = pc_approval value = 0 }
+			}
+
+			# Chance to fire opinion events
+			random_list = {
+				95 = { }
+				3 = {
+					modifier = {
+						add = 5
+						check_variable = { which = pc_approval value >= 80 }
+					}
+					country_event = { id = potent_councilors.10 }
+				}
+				2 = {
+					modifier = {
+						add = 5
+						check_variable = { which = pc_approval value <= 30 }
+					}
+					country_event = { id = potent_councilors.20 }
+				}
+			}
+		}
+	}
+}
+
+# Example high-approval event: Military parade proposal
+country_event = {
+	id = potent_councilors.10
+	title = "potent_councilors.10.name"
+	desc = "potent_councilors.10.desc"
+	picture = GFX_evt_military_parade
+	is_triggered_only = yes
+
+	trigger = {
+		any_owned_leader = {
+			is_councilor = yes
+			leader_class = commander
+			check_variable = { which = pc_approval value >= 75 }
+		}
+	}
+
+	immediate = {
+		random_owned_leader = {
+			limit = {
+				is_councilor = yes
+				leader_class = commander
+				check_variable = { which = pc_approval value >= 75 }
+			}
+			save_event_target_as = military_councilor
+		}
+	}
+
+	option = {
+		name = "potent_councilors.10.a"
+		# Accept parade – small unity/loyalty boost
+		add_modifier = {
+			modifier = pc_military_parade_boost
+			days = 1800
+		}
+		event_target:military_councilor = {
+			change_variable = { which = pc_approval value = 5 }
+		}
+	}
+
+	option = {
+		name = "potent_councilors.10.b"
+		# Decline
+		event_target:military_councilor = {
+			change_variable = { which = pc_approval value = -10 }
+		}
+	}
+}
+
+# Example low-approval event: Scientist leaks tech
+country_event = {
+	id = potent_councilors.20
+	title = "potent_councilors.20.name"
+	desc = "potent_councilors.20.desc"
+	picture = GFX_evt_spy_network
+	is_triggered_only = yes
+
+	trigger = {
+		any_owned_leader = {
+			is_councilor = yes
+			leader_class = scientist
+			check_variable = { which = pc_approval value <= 25 }
+		}
+		any_country = {
+			is_country_type = default
+			has_communications = root
+			NOT = { is_same_value = root }
+		}
+	}
+
+	immediate = {
+		random_owned_leader = {
+			limit = {
+				is_councilor = yes
+				leader_class = scientist
+				check_variable = { which = pc_approval value <= 25 }
+			}
+			save_event_target_as = leaky_scientist
+		}
+		random_country = {
+			limit = {
+				is_country_type = default
+				has_communications = root
+				NOT = { is_same_value = root }
+			}
+			save_event_target_as = leak_target
+		}
+	}
+
+	option = {
+		name = "potent_councilors.20.a"
+		# Investigate – chance to catch, or tech loss
+		event_target:leaky_scientist = {
+			change_variable = { which = pc_approval value = -15 }
+		}
+		# Simplified: small research penalty
+		add_modifier = {
+			modifier = pc_tech_leak_penalty
+			days = 3600
+		}
+		hidden_effect = {
+			# Could transfer a tech or give intel to target
+			event_target:leak_target = {
+				add_opinion_modifier = {
+					who = root
+					modifier = opinion_stolen_tech
+				}
+			}
+		}
+	}
+
+	option = {
+		name = "potent_councilors.20.b"
+		# Ignore / cover up
+		event_target:leaky_scientist = {
+			change_variable = { which = pc_approval value = 5 }
+		}
+	}
+}
+
+# Council Meeting – example famine / resource crisis
+country_event = {
+	id = potent_councilors.100
+	title = "potent_councilors.100.name"
+	desc = "potent_councilors.100.desc"
+	picture = GFX_evt_council_meeting
+	is_triggered_only = yes
+
+	trigger = {
+		OR = {
+			resource_stockpile_compare = {
+				resource = food
+				value < 500
+			}
+			has_modifier = pc_food_shortage_flag
+		}
+		any_owned_leader = { is_councilor = yes }
+	}
+
+	option = {
+		name = "potent_councilors.100.a" # Follow council: ration + research
+		add_resource = { food = -200 }
+		add_modifier = {
+			modifier = pc_emergency_rations
+			days = 1800
+		}
+		every_owned_leader = {
+			limit = { is_councilor = yes is_ruler = no }
+			change_variable = { which = pc_approval value = 8 }
+		}
+	}
+
+	option = {
+		name = "potent_councilors.100.b" # Alternative plan
+		add_modifier = {
+			modifier = pc_forced_austerity
+			days = 3600
+		}
+		every_owned_leader = {
+			limit = { is_councilor = yes is_ruler = no }
+			change_variable = { which = pc_approval value = 2 }
+		}
+	}
+
+	option = {
+		name = "potent_councilors.100.c" # Skip meeting
+		custom_tooltip = potent_councilors.skip_meeting_tt
+		every_owned_leader = {
+			limit = { is_councilor = yes is_ruler = no }
+			change_variable = { which = pc_approval value = -12 }
+		}
+	}
+}
+
+# Generic border concern meeting
+country_event = {
+	id = potent_councilors.101
+	title = "potent_councilors.101.name"
+	desc = "potent_councilors.101.desc"
+	picture = GFX_evt_border_tension
+	is_triggered_only = yes
+
+	option = {
+		name = "potent_councilors.101.a" # Increase readiness
+		add_modifier = {
+			modifier = pc_heightened_alert
+			days = 1800
+		}
+		every_owned_leader = {
+			limit = { is_councilor = yes is_ruler = no }
+			change_variable = { which = pc_approval value = 6 }
+		}
+	}
+
+	option = {
+		name = "potent_councilors.101.c" # Skip
+		every_owned_leader = {
+			limit = { is_councilor = yes is_ruler = no }
+			change_variable = { which = pc_approval value = -10 }
+		}
+	}
+}

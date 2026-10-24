@@ -1,0 +1,23 @@
+l_english:
+ potent_councilors.10.name:0 "Military Parade Proposal"
+ potent_councilors.10.desc:0 "[event_target:military_councilor.GetName], our Minister of Defense, proposes a grand military parade to honor recent successes and boost morale. The council is enthusiastic."
+ potent_councilors.10.a:0 "Authorize the parade."
+ potent_councilors.10.b:0 "Decline. Resources are better spent elsewhere."
+
+ potent_councilors.20.name:0 "Suspected Tech Leak"
+ potent_councilors.20.desc:0 "Intelligence suggests that [event_target:leaky_scientist.GetName] may have shared sensitive research data with [event_target:leak_target.GetName]. Their low confidence in our leadership is concerning."
+ potent_councilors.20.a:0 "Launch an investigation."
+ potent_councilors.20.b:0 "Quietly reassign them and move on."
+
+ potent_councilors.100.name:0 "Council Meeting: Food Crisis"
+ potent_councilors.100.desc:0 "The council has convened to address looming food shortages. Advisors urge decisive action before unrest spreads."
+ potent_councilors.100.a:0 "Implement emergency rations and prioritize agricultural research."
+ potent_councilors.100.b:0 "Impose temporary austerity measures."
+ potent_councilors.100.c:0 "Skip the meeting. I will handle this myself."
+
+ potent_councilors.101.name:0 "Council Meeting: Border Forces"
+ potent_councilors.101.desc:0 "Reports indicate a neighboring empire is massing forces near our borders. The council seeks guidance on our response."
+ potent_councilors.101.a:0 "Raise readiness and reinforce the border."
+ potent_councilors.101.c:0 "Skip the meeting."
+
+ potent_councilors.skip_meeting_tt:0 "Skipping the meeting will significantly lower the approval of all councilors."
